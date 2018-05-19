@@ -35,6 +35,9 @@ class ParseXML(object):
             print "No key is exist"
             return False
 
+    def get_db_engine(self):
+        return self.data['mysqldump']['database']['table_structure']['options']['@Engine']
+        
     def is_pkey_exist(self):
         try:
             if self.is_key_exist():
@@ -103,21 +106,23 @@ class ParseXML(object):
                     query = query + self.get_query_stmt()
                 query = query + "%s %s %s %s" % (col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
                 if not col.has_key('@Default'):
-                    query = query + ");\n"
+                    query = query + ")"
                 else:
-                    query = query + "DEFAULT '%s'\n);\n" % (col['@Default'])
+                    query = query + "DEFAULT '%s'\n)" % (col['@Default'])
+
+        query = query + "Engine=%s;\n" % (self.get_db_engine())
 
         return query
     
 if __name__ == '__main__':
-    file_name = "/home/sripathi/projects/sql-xml-utility/src/src_tutorials_tbl.xml"
+    file_name = "/home/sripathi/projects/sql-xml-utility/src/src_pet.xml"
     xml_parser = ParseXML(file_name)
     query = xml_parser.get_ddl()
     print query
-    db_manager = DBManager()
-    with open('config.json') as f:
-        config = json.load(f)
-    conn = db_manager.open_connection(**config['qa'])
-    db_manager.create_table(query)
+    # db_manager = DBManager()
+    # with open('config.json') as f:
+    #     config = json.load(f)
+    # conn = db_manager.open_connection(**config['qa'])
+    # db_manager.create_table(query)
     # #db_manager.drop_table(xml_parser.get_table_name())
     

@@ -3,10 +3,14 @@ import xmltodict
 from db_manager import DBManager
 
 def xml_to_json(xml_file):
+    print xml_file
     with open(xml_file, 'r') as f:
         xmlString = f.read()
     jsonString = json.dumps(xmltodict.parse(xmlString), indent=4)
     return json.loads(jsonString)
+
+def get_table_name(xml_file):
+    return xml_file.split('.')[0].split('/')[-1]
 
 class ParseXML(object):
 
@@ -17,8 +21,6 @@ class ParseXML(object):
         self.keys = None
         self.pkeys= None
         
-    def get_table_name(self):
-        return self.xml_file.split('.')[0].split('/')[-1]
     
     def is_key_exist(self):
         try:
@@ -77,7 +79,7 @@ class ParseXML(object):
         return query_stmt
     
     def get_ddl(self):
-        table_name = self.get_table_name()
+        table_name = get_table_name(self.xml_file)
         cols = self.get_columns()
         col_no = 0
         query = "create table %s(\n" % (table_name)

@@ -1,0 +1,16 @@
+{
+    "dev": {
+	"db_host": "localhost",
+	"db_user": "root",
+	"db_pswd": "123",
+	"db_name": "one",
+	"file_save_path" : "/home/sripathi/projects/utility-mysql-xml/xml-sql/files/"
+    },
+    "qa": {
+	"db_host": "localhost",
+	"db_user": "root",
+	"db_pswd": "123",
+	"db_name": "two",
+	"file_save_path" : "/home/sripathi/projects/utility-mysql-xml/xml-sql/files/"
+    }
+}

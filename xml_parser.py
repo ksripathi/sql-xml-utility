@@ -3,7 +3,6 @@ import xmltodict
 from db_manager import DBManager
 
 def xml_to_json(xml_file):
-    print xml_file
     with open(xml_file, 'r') as f:
         xmlString = f.read()
     jsonString = json.dumps(xmltodict.parse(xmlString), indent=4)
@@ -20,7 +19,53 @@ class ParseXML(object):
         self.data = xml_to_json(xml_file)
         self.keys = None
         self.pkeys= None
+
+    def get_add_col_ddl(self, col_name):
+        col = [i for i in self.get_columns() if i['@Field'] == col_name]
+        table_name = get_table_name(self.xml_file)
+        col = col[0]
+        if col is not None:
+            if col['@Null'] == 'YES':
+                col['@Null'] = 'NULL'
+            elif col['@Null'] == 'NO':
+                col['@Null'] = 'NOT NULL'
+            else:
+                col['@Null'] = ''
+            query = "ALTER TABLE %s ADD %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
+            if col.has_key('@DEFAULT'):
+                query = "%s DEFAULT %s;" % (query, col['@DEFAULT'])
+            else:
+                query = "%s;" % query
+        return query
+
+    def get_rm_col_ddl(self, col_name):
+        table_name = get_table_name(self.xml_file)
+        query = "ALTER TABLE %s DROP %s;" % (table_name, col_name)
+        return query
+
+    def get_update_col_ddl(self, col_name):
+        table_name = get_table_name(self.xml_file)
+        col = [i for i in self.get_columns() if i['@Field'] == col_name]
+        col = col[0]
+        if col is not None:
+            if col['@Null'] == 'YES':
+                col['@Null'] = 'NULL'
+            elif col['@Null'] == 'NO':
+                col['@Null'] = 'NOT NULL'
+            else:
+                col['@Null'] = ''
+            query = "ALTER TABLE %s MODIFY %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
+            if col.has_key('@DEFAULT'):
+                query = "%s DEFAULT %s;" % (query, col['@DEFAULT'])
+            else:
+                query = "%s;" % query
+        return query
+
+    
         
+    def get_col_names(self):
+        cols = [i['@Field'] for i in self.get_columns() if i.has_key('@Field')]
+        return cols
     
     def is_key_exist(self):
         try:

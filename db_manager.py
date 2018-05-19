@@ -58,6 +58,14 @@ class DBManager(object):
             return True
         except Exception as e:
             raise e
+    def alter_column(self, query):
+        try:
+            conn = self.db_conn
+            cursor = conn.cursor()
+            res = cursor.execute(query)
+            return True
+        except Exception as e:
+            raise e
         
         
 if __name__ == '__main__':
@@ -68,7 +76,4 @@ if __name__ == '__main__':
 
     conn = db_manager.open_connection(**config['dev'])
     tables = db_manager.get_tables()
-    print "######### tables #######"
-    print tables
-    print "#######################"
     db_manager.close_connection(conn)

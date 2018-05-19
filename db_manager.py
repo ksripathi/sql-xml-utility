@@ -38,9 +38,7 @@ class DBManager(object):
             raise e
 
     def create_table(self, query):
-        print "*********"
         print query
-        print "*********"
         try:
             conn = self.db_conn
             cursor = conn.cursor()
@@ -59,10 +57,6 @@ class DBManager(object):
         except Exception as e:
             raise e
     def alter_column(self, query):
-        print "*********"
-        print query
-        print "*********"
-
         try:
             conn = self.db_conn
             cursor = conn.cursor()

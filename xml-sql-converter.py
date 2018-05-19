@@ -46,6 +46,16 @@ class DiffXML(object):
         files = [name for name in os.listdir(path) if name.endswith('.xml')]
         return files
 
+    def add_pkeys(self, keys):
+        parser = ParseXML(self.src_xml_file)
+        query = parser.get_add_pkey_ddl(keys)
+        self.db_manager.alter_column(query)
+
+    def remove_pkeys(self, keys):
+        parser = ParseXML(self.src_xml_file)
+        query = parser.get_rm_pkey_ddl(keys)
+        self.db_manager.alter_column(query)
+
     def add_columns(self, cols):
         parser = ParseXML(self.src_xml_file)
         for col in cols:
@@ -81,23 +91,33 @@ class DiffXML(object):
             remove_files(dest_path)
             
     def cmp_xml_files(self, file):
+
         self.src_xml_file = "%s/%s" % (self.src_xml_path, file)
         src_json = ParseXML(self.src_xml_file)
         src_col_names = src_json.get_col_names()
-        src_pkeys = None
+        src_pkeys = []
         if src_json.is_pkey_exist():
-            src_pkeys = src_json.pkeys
+            src_pkeys = src_json.get_pkeys()
 
         self.target_xml_file = "%s/%s" % (self.target_xml_path, file)
         target_json = ParseXML(self.target_xml_file)
         target_col_names = target_json.get_col_names()
-        target_pkeys = None
+        target_pkeys = []
         if target_json.is_pkey_exist():
-            target_pkeys = target_json.pkeys
-
+            target_pkeys = target_json.get_pkeys()
+        
         new_col_names = list(set(src_col_names) - set(target_col_names))
         del_col_names = list(set(target_col_names) - set(src_col_names))
         common_cols = list(set(src_col_names) & set(target_col_names))
+
+        new_pkeys = list(set(src_pkeys)-set(target_pkeys))
+
+        if len(target_pkeys) > 0:
+            self.remove_pkeys(target_pkeys)
+        if len(src_pkeys) > 0:
+            self.add_pkeys(src_pkeys)
+            
+        
         self.add_columns(new_col_names)
         self.remove_columns(del_col_names)
         self.update_columns(common_cols)
@@ -113,8 +133,8 @@ class DiffXML(object):
         remove_files = list(target_files - src_files)
         self.remove_xml_files(remove_files)
 
-        cmp_files = list(src_files & target_files)
-        for file in cmp_files:
+        common_files = list(src_files & target_files)
+        for file in common_files:
             self.cmp_xml_files(file)
         
 if __name__ == '__main__':

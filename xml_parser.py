@@ -5,9 +5,7 @@ from db_manager import DBManager
 COL_STR_TYPES = ["CHAR", "VARCHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT","LONGTEXT"]
 
 def is_str_type(value):
-    print "value before = %s" % (value)
     value = value.split('(')[0].upper()
-    print "value after = %s" % (value)
     if value in COL_STR_TYPES:
         return True
     else:
@@ -31,6 +29,20 @@ class ParseXML(object):
         self.data = xml_to_json(xml_file)
         self.keys = None
         self.pkeys= None
+
+    def get_add_pkey_ddl(self, keys):
+        table_name = get_table_name(self.xml_file)
+        query = "ALTER TABLE %s ADD PRIMARY KEY(" % (table_name)
+        keys = ",".join(keys)
+        query = "%s%s);" % (query, keys)
+        print query
+        return query
+
+    def get_rm_pkey_ddl(self, keys):
+        table_name = get_table_name(self.xml_file)
+        query = "ALTER TABLE %s DROP PRIMARY KEY;" % (table_name)
+        print query
+        return query
 
     def get_add_col_ddl(self, col_name):
         col = [i for i in self.get_columns() if i['@Field'] == col_name]
@@ -104,8 +116,12 @@ class ParseXML(object):
 
     def get_db_engine(self):
         return self.data['mysqldump']['database']['table_structure']['options']['@Engine']
+    def get_pkeys(self):
+        cols = [i['@Column_name'] for i in self.pkeys if i['@Key_name'] == 'PRIMARY']
+        return cols
         
     def is_pkey_exist(self):
+
         try:
             if self.is_key_exist():
 
@@ -151,7 +167,6 @@ class ParseXML(object):
         primary = ""
         
         for col in cols:
-            print col
             if col['@Null'] == "YES":
                 col['@Null'] = "NULL"
 
@@ -169,9 +184,9 @@ class ParseXML(object):
                 else:
                     query = "%s Default" % (query) 
                     if is_str_type(col['@Type']):
-                        query = "%s '%s'" % (query, col['@Default'])
+                        query = "%s '%s',\n" % (query, col['@Default'])
                     else:
-                        query = "%s %s" % (query, col['@Default'])
+                        query = "%s %s,\n" % (query, col['@Default'])
             else:
                 count = 0
                 if self.is_pkey_exist():
@@ -182,9 +197,9 @@ class ParseXML(object):
                 else:
                     query = "%s Default" % (query) 
                     if is_str_type(col['@Type']):
-                        query = "%s '%s'" % (query, col['@Default'])
+                        query = "%s '%s',\n" % (query, col['@Default'])
                     else:
-                        query = "%s %s" % (query, col['@Default'])
+                        query = "%s %s,\n" % (query, col['@Default'])
 
         query = query + "Engine=%s;\n" % (self.get_db_engine())
 

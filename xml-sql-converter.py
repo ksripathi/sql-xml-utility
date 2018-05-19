@@ -12,9 +12,9 @@ def rsync_files(src_file, dest_file):
         print command
         (ret_code, output) = execute_command(command)
         if ret_code == 0:
-            print "Copy successful"
+            print copy_command
         else:
-            print "Error in while copying"
+            print "Error in while command %s" % (copy_command)
     except Exception as e:
         print str(e)
 
@@ -23,9 +23,9 @@ def remove_files(file_path):
         cmd = "rm -rf %s" % (file_path)
         (ret_code, output) = execute_command(cmd)
         if ret_code == 0:
-            print "Delete file"
+            print cmd
         else:
-            print "Error in while deleting file"
+            print "Error in while %s" % (cmd)
     except Exception as e:
         print str(e)
 
@@ -70,12 +70,8 @@ class DiffXML(object):
         src_files = set(self.get_xml_files(self.src_xml_path))
         target_files = set(self.get_xml_files(self.target_xml_path))
         new_files = list(src_files - target_files)
-        print "*****new files******"
-        print new_files
         self.add_xml_files(new_files)
         remove_files = list(target_files - src_files)
-        print "*****files to be deleted******"
-        print remove_files
         self.remove_xml_files(remove_files)
         #cmp_files = list(src_files & target_files)
         #print cmp_files

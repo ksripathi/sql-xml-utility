@@ -27,8 +27,8 @@ class MysqlXmlConverter(object):
         except Exception as e:
             pass
         
-        cmd = "mysqldump --xml --no-data -h %s -u %s -p%s %s %s > %s/%s_%s.xml" % \
-              (self.host, self.user, self.pswd, self.name, tbl_name, self.path, self.name, tbl_name)
+        cmd = "mysqldump --xml --no-data -h %s -u %s -p%s %s %s > %s/%s.xml" % \
+              (self.host, self.user, self.pswd, self.name, tbl_name, self.path, tbl_name)
         try:
             (ret_code, output) = execute_command(cmd)
             if ret_code !=0 :

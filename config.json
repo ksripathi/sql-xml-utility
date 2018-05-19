@@ -3,14 +3,14 @@
 	"db_host": "localhost",
 	"db_user": "root",
 	"db_pswd": "123",
-	"db_name": "one",
-	"file_save_path" : "/home/sripathi/projects/utility-mysql-xml/xml-sql/files/"
+	"db_name": "src",
+	"file_save_path" : "/home/sripathi/projects/sql-xml-utility/src/"
     },
     "qa": {
 	"db_host": "localhost",
 	"db_user": "root",
 	"db_pswd": "123",
-	"db_name": "two",
-	"file_save_path" : "/home/sripathi/projects/utility-mysql-xml/xml-sql/files/"
+	"db_name": "target",
+	"file_save_path" : "/home/sripathi/projects/"
     }
 }

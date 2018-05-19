@@ -18,23 +18,38 @@ class ParseXML(object):
         self.pkeys= None
         
     def get_table_name(self):
-        return self.xml_file.split('.')[0]
+        return self.xml_file.split('.')[0].split('/')[-1]
     
     def is_key_exist(self):
         try:
-            self.keys = self.data['mysqldump']['database']['table_structure']['key']
+            keys = self.data['mysqldump']['database']['table_structure']['key']
+            if type(keys) is list:
+                self.keys = keys
+            else:
+                temp_list = []
+                temp_list.append(keys)
+                self.keys = temp_list
             return True
         except Exception as e:
+            print str(e)
+            print "No key is exist"
             return False
 
     def is_pkey_exist(self):
         try:
             if self.is_key_exist():
-                self.pkeys = filter(lambda key: key['@Key_name'] == 'PRIMARY', self.keys)
+
+                pkeys = filter(lambda key: key['@Key_name'] == 'PRIMARY', self.keys)
+                if type(pkeys) is list:
+                    self.pkeys =  pkeys
+                else:
+                    temp_list = []
+                    templ_list.append(pkeys)
+                    self.pkeys = temp_list
                 return True
-            else:
-                return False
+
         except Exception as e:
+            print str(e)
             return False
 
     def get_columns(self):
@@ -55,12 +70,12 @@ class ParseXML(object):
                 query_stmt = query_stmt + "%s," % (p_key['@Column_name'])
             else:
                 query_stmt = query_stmt + "%s),\n" % (p_key['@Column_name'])
+
         return query_stmt
     
     def get_ddl(self):
         table_name = self.get_table_name()
         cols = self.get_columns()
-        print cols
         col_no = 0
         query = "create table %s(\n" % (table_name)
         primary = ""
@@ -95,14 +110,14 @@ class ParseXML(object):
         return query
     
 if __name__ == '__main__':
-    
-    xml_parser = ParseXML("test_db_lab_developers.xml")
+    file_name = "/home/sripathi/projects/sql-xml-utility/src/src_tutorials_tbl.xml"
+    xml_parser = ParseXML(file_name)
     query = xml_parser.get_ddl()
     print query
-    # db_manager = DBManager()
-    # with open('config.json') as f:
-    #     config = json.load(f)
-    # conn = db_manager.open_connection(**config['qa'])
-    # db_manager.create_table(query)
+    db_manager = DBManager()
+    with open('config.json') as f:
+        config = json.load(f)
+    conn = db_manager.open_connection(**config['qa'])
+    db_manager.create_table(query)
     # #db_manager.drop_table(xml_parser.get_table_name())
     

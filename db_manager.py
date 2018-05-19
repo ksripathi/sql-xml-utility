@@ -38,6 +38,9 @@ class DBManager(object):
             raise e
 
     def create_table(self, query):
+        print "*********"
+        print query
+        print "*********"
         try:
             conn = self.db_conn
             cursor = conn.cursor()

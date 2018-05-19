@@ -2,6 +2,17 @@ import json
 import xmltodict
 from db_manager import DBManager
 
+COL_STR_TYPES = ["CHAR", "VARCHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT","LONGTEXT"]
+
+def is_str_type(value):
+    print "value before = %s" % (value)
+    value = value.split('(')[0].upper()
+    print "value after = %s" % (value)
+    if value in COL_STR_TYPES:
+        return True
+    else:
+        return False
+        
 def xml_to_json(xml_file):
     with open(xml_file, 'r') as f:
         xmlString = f.read()
@@ -10,6 +21,7 @@ def xml_to_json(xml_file):
 
 def get_table_name(xml_file):
     return xml_file.split('.')[0].split('/')[-1]
+
 
 class ParseXML(object):
 
@@ -32,8 +44,12 @@ class ParseXML(object):
             else:
                 col['@Null'] = ''
             query = "ALTER TABLE %s ADD %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
-            if col.has_key('@DEFAULT'):
-                query = "%s DEFAULT %s;" % (query, col['@DEFAULT'])
+            if col.has_key('@Default'):
+                query = "%s Default" % (query) 
+                if is_str_type(col['@Type']):
+                    query = "%s '%s'" % (query, col['@Default'])
+                else:
+                    query = "%s %s" % (query, col['@Default'])
             else:
                 query = "%s;" % query
         return query
@@ -55,8 +71,12 @@ class ParseXML(object):
             else:
                 col['@Null'] = ''
             query = "ALTER TABLE %s MODIFY %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
-            if col.has_key('@DEFAULT'):
-                query = "%s DEFAULT %s;" % (query, col['@DEFAULT'])
+            if col.has_key('@Default'):
+                query = "%s Default" % (query) 
+                if is_str_type(col['@Type']):
+                    query = "%s '%s'" % (query, col['@Default'])
+                else:
+                    query = "%s %s" % (query, col['@Default'])
             else:
                 query = "%s;" % query
         return query
@@ -131,6 +151,7 @@ class ParseXML(object):
         primary = ""
         
         for col in cols:
+            print col
             if col['@Null'] == "YES":
                 col['@Null'] = "NULL"
 
@@ -143,10 +164,14 @@ class ParseXML(object):
             col_no += 1
             if col_no != len(cols):
                 query = query + "%s %s %s %s" % (col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
-                if not col.has_key('DEFAULT'):
+                if not col.has_key('@Default'):
                     query = query + ",\n"
                 else:
-                    query = query + "DEFAULT '%s',\n" % (col['@Default'])
+                    query = "%s Default" % (query) 
+                    if is_str_type(col['@Type']):
+                        query = "%s '%s'" % (query, col['@Default'])
+                    else:
+                        query = "%s %s" % (query, col['@Default'])
             else:
                 count = 0
                 if self.is_pkey_exist():
@@ -155,7 +180,11 @@ class ParseXML(object):
                 if not col.has_key('@Default'):
                     query = query + ")"
                 else:
-                    query = query + "DEFAULT '%s'\n)" % (col['@Default'])
+                    query = "%s Default" % (query) 
+                    if is_str_type(col['@Type']):
+                        query = "%s '%s'" % (query, col['@Default'])
+                    else:
+                        query = "%s %s" % (query, col['@Default'])
 
         query = query + "Engine=%s;\n" % (self.get_db_engine())
 

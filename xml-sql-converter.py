@@ -117,8 +117,6 @@ class DiffXML(object):
         for file in cmp_files:
             self.cmp_xml_files(file)
         
-
-    
 if __name__ == '__main__':
     src_path = "/home/sripathi/projects/sql-xml-utility/src"
     dest_path = "/home/sripathi/projects/sql-xml-utility/dest"

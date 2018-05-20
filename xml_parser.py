@@ -12,203 +12,221 @@ def is_str_type(value):
         return False
         
 def xml_to_json(xml_file):
-    with open(xml_file, 'r') as f:
-        xmlString = f.read()
-    jsonString = json.dumps(xmltodict.parse(xmlString), indent=4)
-    return json.loads(jsonString)
+    try:
+        with open(xml_file, 'r') as f:
+            xml_str = f.read()
+        json_str = json.dumps(xmltodict.parse(xml_str), indent=4)
+        return json.loads(json_str)
+    except Exception as e:
+        raise str(e)
 
 def get_table_name(xml_file):
     return xml_file.split('.')[0].split('/')[-1]
 
 
-class ParseXML(object):
+class XMLParser(object):
 
-    def __init__(self, xml_file):
+    def __init__(self):
 
-        self.xml_file = xml_file
-        self.data = xml_to_json(xml_file)
+        self.xml_file = None
+        self.table_name = None
+        self.json_obj = None
         self.keys = None
         self.pkeys= None
+        
+    def parse(self, xml_file):
+        self.xml_file = xml_file
+        self.table_name = get_table_name(self.xml_file)
+        self.json_obj = xml_to_json(self.xml_file)
 
+    def get_table_name(self):
+        try:
+            return self.xml_file.split('.')[0].split('/')[-1]
+        except Exception as e:
+            raise str(e)
+        
     def get_add_pkey_ddl(self, keys):
-        table_name = get_table_name(self.xml_file)
-        query = "ALTER TABLE %s ADD PRIMARY KEY(" % (table_name)
-        keys = ",".join(keys)
-        query = "%s%s);" % (query, keys)
-        print query
-        return query
-
-    def get_rm_pkey_ddl(self, keys):
-        table_name = get_table_name(self.xml_file)
-        query = "ALTER TABLE %s DROP PRIMARY KEY;" % (table_name)
-        print query
-        return query
-
-    def get_add_col_ddl(self, col_name):
-        col = [i for i in self.get_columns() if i['@Field'] == col_name]
-        table_name = get_table_name(self.xml_file)
-        col = col[0]
-        if col is not None:
-            if col['@Null'] == 'YES':
-                col['@Null'] = 'NULL'
-            elif col['@Null'] == 'NO':
-                col['@Null'] = 'NOT NULL'
-            else:
-                col['@Null'] = ''
-            query = "ALTER TABLE %s ADD %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
-            if col.has_key('@Default'):
-                query = "%s Default" % (query) 
-                if is_str_type(col['@Type']):
-                    query = "%s '%s'" % (query, col['@Default'])
-                else:
-                    query = "%s %s" % (query, col['@Default'])
-            else:
-                query = "%s;" % query
+        if not keys:
+            query = "ALTER TABLE %s ADD PRIMARY KEY(" % (self.table_name)
+            keys = ",".join(keys)
+            query = "%s%s);\n" % (query, keys)
+            return query
+        
+    def get_rm_pkey_ddl(self):
+        query = "ALTER TABLE %s DROP PRIMARY KEY;" % (self.table_name)
         return query
 
     def get_rm_col_ddl(self, col_name):
-        table_name = get_table_name(self.xml_file)
-        query = "ALTER TABLE %s DROP %s;" % (table_name, col_name)
+        query = "ALTER TABLE %s DROP %s;" % (self.table_name, col_name)
         return query
+    
+    def get_null_value(self, value):
+        
+        if value == 'YES':
+            return 'NULL'
+        elif value == 'NO':
+            return 'NOT NULL'
+        else:
+            return ''
+        
+    def get_add_col_ddl(self, col_name):
+
+        ####### Code to be refactored ######### this should return dict insted list of dict
+        col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
+        # col = [col for col in self.get_columns() if col['@Field'] == col_name]
+        # col = col[0]
+        col['@Null'] == self.get_null_value(col['@Null'])
+        col_name = col['@Field']
+        col_type = col['@Type']
+        col_null = col['@Null']
+        col_extra = col['@Extra']
+            
+        query_str = "ALTER TABLE %s ADD %s %s %s %s" % (self.table_name, col_name, col_type, col_null, col_extra)
+        if col.has_key('@Default'):
+            col_default = col['@Default']
+            query_str = "%s Default" % (query_str) 
+            if is_str_type(col_type):
+                query = "%s '%s';" % (query_str, col_default)
+            else:
+                query = "%s %s;" % (query_str, col_default)
+        else:
+            query = "%s;" % query_str
+        return query
+
 
     def get_update_col_ddl(self, col_name):
-        table_name = get_table_name(self.xml_file)
-        col = [i for i in self.get_columns() if i['@Field'] == col_name]
-        col = col[0]
-        if col is not None:
-            if col['@Null'] == 'YES':
-                col['@Null'] = 'NULL'
-            elif col['@Null'] == 'NO':
-                col['@Null'] = 'NOT NULL'
+        col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
+        # col = [col for col in self.get_columns() if col['@Field'] == col_name]
+        # col = col[0]
+        col['@Null'] == self.get_null_value(col['@Null'])
+        col_name = col['@Field']
+        col_type = col['@Type']
+        col_null = col['@Null']
+        col_extra = col['@Extra']
+
+        query_str = "ALTER TABLE %s MODIFY %s %s %s %s" % (self.table_name, col_name, col_type, col_null, col_extra)
+        if col.has_key('@Default'):
+            col_default = col['@Default']
+            query_str = "%s Default" % (query_str) 
+            if is_str_type(col_type):
+                query = "%s '%s';" % (query_str, col_default)
             else:
-                col['@Null'] = ''
-            query = "ALTER TABLE %s MODIFY %s %s %s %s" % (table_name, col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
-            if col.has_key('@Default'):
-                query = "%s Default" % (query) 
-                if is_str_type(col['@Type']):
-                    query = "%s '%s'" % (query, col['@Default'])
-                else:
-                    query = "%s %s" % (query, col['@Default'])
-            else:
-                query = "%s;" % query
+                query = "%s %s;" % (query_str, col_default)
+        else:
+            query = "%s;" % query_str
         return query
 
-    
-        
     def get_col_names(self):
-        cols = [i['@Field'] for i in self.get_columns() if i.has_key('@Field')]
-        return cols
+        col_names = [col['@Field'] for col in self.get_columns() if col.has_key('@Field')]
+        return col_names
     
     def is_key_exist(self):
         try:
-            keys = self.data['mysqldump']['database']['table_structure']['key']
+            keys = self.json_obj['mysqldump']['database']['table_structure']['key']
             if type(keys) is list:
                 self.keys = keys
             else:
-                temp_list = []
-                temp_list.append(keys)
-                self.keys = temp_list
+                key_list = []
+                key_list.append(keys)
+                self.keys = key_list
             return True
         except Exception as e:
             print str(e)
-            print "No key is exist"
             return False
 
     def get_db_engine(self):
-        return self.data['mysqldump']['database']['table_structure']['options']['@Engine']
-    def get_pkeys(self):
-        cols = [i['@Column_name'] for i in self.pkeys if i['@Key_name'] == 'PRIMARY']
-        return cols
+        return self.json_obj['mysqldump']['database']['table_structure']['options']['@Engine']
+    
+    def get_pkey_names(self):
+        pkey_names = [key['@Column_name'] for key in self.pkeys if key['@Key_name'] == 'PRIMARY']
+        return pkey_names
         
     def is_pkey_exist(self):
 
         try:
             if self.is_key_exist():
-
                 pkeys = filter(lambda key: key['@Key_name'] == 'PRIMARY', self.keys)
                 if type(pkeys) is list:
                     self.pkeys =  pkeys
+                elif len(pkeys) > 0:
+                    pkey_list = []
+                    pkey_list.append(pkeys)
+                    self.pkeys = pkey_list
                 else:
-                    temp_list = []
-                    templ_list.append(pkeys)
-                    self.pkeys = temp_list
+                    return False
                 return True
-
+            else:
+                return False
         except Exception as e:
             print str(e)
             return False
 
     def get_columns(self):
-        cols = self.data['mysqldump']['database']['table_structure']['field']
+
+        cols = self.json_obj['mysqldump']['database']['table_structure']['field']
         if type(cols) is list:
             return cols
         else:
-            temp = []
-            temp.append(cols)
-            return temp
+            cols_list = []
+            cols_list.append(cols)
+            return cols_list
 
-    def get_query_stmt(self):
-        query_stmt = "PRIMARY KEY ("
-        count = 0
-        for p_key in self.pkeys:
-            count += 1
-            if count != len(self.pkeys):
-                query_stmt = query_stmt + "%s," % (p_key['@Column_name'])
-            else:
-                query_stmt = query_stmt + "%s),\n" % (p_key['@Column_name'])
-
-        return query_stmt
+    def get_pkey_ddl_stmt(self, pkeys):
+        query_str = "PRIMARY KEY ("
+        print "%%%%%%%%"
+        print pkeys
+        query = "%s%s),\n" % (query_str, ",".join(pkeys))
+        return query
     
-    def get_ddl(self):
-        table_name = get_table_name(self.xml_file)
+    def get_create_table_ddl(self):
         cols = self.get_columns()
+        query_str = "CREATE TABLE %s(\n" % (self.table_name)
         col_no = 0
-        query = "create table %s(\n" % (table_name)
+        
         primary = ""
         
         for col in cols:
-            if col['@Null'] == "YES":
-                col['@Null'] = "NULL"
-
-            elif col['@Null'] == "NO":
-                col['@Null'] = "NOT NULL"
-
-            else:
-                pass
+            col['@Null'] = self.get_null_value(col['@Null'])
+            col_name = col['@Field']
+            col_type = col['@Type']
+            col_null = col['@Null']
+            col_extra = col['@Extra']
 
             col_no += 1
             if col_no != len(cols):
-                query = query + "%s %s %s %s" % (col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
+                query_str = query_str + "%s %s %s %s" % (col_name, col_type, col_null, col_extra)
                 if not col.has_key('@Default'):
-                    query = query + ",\n"
+                    query_str = query_str + ",\n"
                 else:
-                    query = "%s Default" % (query) 
-                    if is_str_type(col['@Type']):
-                        query = "%s '%s',\n" % (query, col['@Default'])
+                    col_default = col['@Default']
+                    query_str = "%s Default" % (query_str) 
+                    if is_str_type(col_type):
+                        query_str = "%s '%s',\n" % (query_str, col_default)
                     else:
-                        query = "%s %s,\n" % (query, col['@Default'])
+                        query_str = "%s %s,\n" % (query_str, col_default)
             else:
-                count = 0
                 if self.is_pkey_exist():
-                    query = query + self.get_query_stmt()
-                query = query + "%s %s %s %s" % (col['@Field'], col['@Type'], col['@Null'], col['@Extra'])
+                    query_str = query_str + self.get_pkey_ddl_stmt(self.get_pkey_names())
+                query_str = query_str + "%s %s %s %s" % (col_name, col_type, col_null, col_extra)
                 if not col.has_key('@Default'):
-                    query = query + ")"
+                    query_str = query_str + ")"
                 else:
-                    query = "%s Default" % (query) 
-                    if is_str_type(col['@Type']):
-                        query = "%s '%s',\n" % (query, col['@Default'])
+                    col_default = col['@Default']
+                    query_str = "%s Default" % (query_str) 
+                    if is_str_type(col_type):
+                        query_str = "%s '%s',\n" % (query_str, col_default)
                     else:
-                        query = "%s %s,\n" % (query, col['@Default'])
+                        query_str = "%s %s,\n" % (query_str, col_default)
 
-        query = query + "Engine=%s;\n" % (self.get_db_engine())
+        query = query_str + "Engine=%s;\n" % (self.get_db_engine())
 
         return query
     
 if __name__ == '__main__':
-    file_name = "/home/sripathi/projects/sql-xml-utility/src/src_pet.xml"
-    xml_parser = ParseXML(file_name)
-    query = xml_parser.get_ddl()
+    file_name = "/home/sripathi/projects/sql-xml-utility/src/pet.xml"
+    xml_parser = XMLParser()
+    xml_parser.parse(file_name)
+    query = xml_parser.get_create_table_ddl()
     print query
     # db_manager = DBManager()
     # with open('config.json') as f:

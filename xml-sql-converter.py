@@ -46,29 +46,29 @@ class XML_Mysql_Conveter(object):
         return files
 
     def add_pkeys(self, keys):
-        # self.xml_parser.parse(self.src_xml_file)
+        self.xml_parser.parse(self.src_xml_file)
         query = self.xml_parser.get_add_pkey_ddl(keys)
         self.db_manager.alter_column(query)
 
     def remove_pkeys(self):
-        # self.xml_parser.parse(self.src_xml_file)
+        self.xml_parser.parse(self.src_xml_file)
         query = self.xml_parser.get_rm_pkey_ddl()
         self.db_manager.alter_column(query)
 
     def add_columns(self, cols):
-        #self.xml_parser.parse(self.src_xml_file)
+        self.xml_parser.parse(self.src_xml_file)
         for col in cols:
             query = self.xml_parser.get_add_col_ddl(col)
             self.db_manager.alter_column(query)
             
     def remove_columns(self, cols):
-        #self.xml_parser.parse(self.src_xml_file)
+        self.xml_parser.parse(self.src_xml_file)
         for col in cols:
             query = self.xml_parser.get_rm_col_ddl(col)
             self.db_manager.alter_column(query)
 
     def update_columns(self, cols):
-        #self.xml_parser.parse(self.src_xml_file)
+        self.xml_parser.parse(self.src_xml_file)
         for col in cols:
             query = self.xml_parser.get_update_col_ddl(col)
             self.db_manager.alter_column(query)
@@ -94,7 +94,7 @@ class XML_Mysql_Conveter(object):
         self.src_xml_file = "%s/%s" % (self.src_xml_path, file)
         self.xml_parser.parse(self.src_xml_file)
         src_json = self.xml_parser.json_obj
-        
+
         src_col_names = self.xml_parser.get_col_names()
         src_pkeys = []
         if self.xml_parser.is_pkey_exist():
@@ -115,14 +115,17 @@ class XML_Mysql_Conveter(object):
         new_pkeys = list(set(src_pkeys) - set(target_pkeys))
         del_pkeys = list(set(target_pkeys) - set(src_pkeys))
         common_pkeys = list(set(src_pkeys) & set(target_pkeys))
-        
-        if new_pkeys:
+
+        if len(target_pkeys) > 0:
             self.remove_pkeys()
-            self.add_pkeys(new_pkeys)
-        if del_col_names:
-            self.remove_pkeys()
-        if common_cols:
-            pass
+        if len(src_pkeys) > 0:
+            self.add_pkeys(src_pkeys)
+        # if new_pkeys and target_pkeys:
+        #     self.remove_pkeys()
+        #     self.add_pkeys(new_pkeys)
+            
+        # if new_pkeys and not target_pkeys:
+        #     self.add_pkeys(new_pkeys)
             
         self.add_columns(new_col_names)
         self.remove_columns(del_col_names)

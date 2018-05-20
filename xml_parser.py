@@ -75,7 +75,8 @@ class XMLParser(object):
 
         ####### Code to be refactored ######### this should return dict insted list of dict
         col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
-        # col = [col for col in self.get_columns() if col['@Field'] == col_name]
+        #col = [col for col in self.get_columns() if col['@Field'] == col_name]
+        print col
         col = col[0]
         col['@Null'] = self.get_null_value(col['@Null'])
         col_name = col['@Field']
@@ -98,7 +99,7 @@ class XMLParser(object):
 
     def get_update_col_ddl(self, col_name):
         col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
-        # col = [col for col in self.get_columns() if col['@Field'] == col_name]
+        #col = [col for col in self.get_columns() if col['@Field'] == col_name]
         col = col[0]
         col['@Null'] = self.get_null_value(col['@Null'])
         col_name = col['@Field']
@@ -147,15 +148,16 @@ class XMLParser(object):
 
         try:
             if self.is_key_exist():
+                print self.keys
                 pkeys = filter(lambda key: key['@Key_name'] == 'PRIMARY', self.keys)
-                if type(pkeys) is list:
-                    self.pkeys =  pkeys
-                elif len(pkeys) > 0:
+                if not pkeys:
+                    return False
+                elif type(pkeys) is dict:
                     pkey_list = []
                     pkey_list.append(pkeys)
                     self.pkeys = pkey_list
                 else:
-                    return False
+                    self.pkeys =  pkeys
                 return True
             else:
                 return False
@@ -223,11 +225,12 @@ class XMLParser(object):
         return query
     
 if __name__ == '__main__':
-    file_name = "/home/sripathi/projects/sql-xml-utility/src/pet.xml"
-    xml_parser = XMLParser()
-    xml_parser.parse(file_name)
-    query = xml_parser.get_create_table_ddl()
-    print query
+    print "xml_parser module"
+    # file_name = "/home/sripathi/projects/sql-xml-utility/src/pet.xml"
+    # xml_parser = XMLParser()
+    # xml_parser.parse(file_name)
+    # query = xml_parser.get_create_table_ddl()
+    # print query
     # db_manager = DBManager()
     # with open('config.json') as f:
     #     config = json.load(f)

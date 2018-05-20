@@ -57,6 +57,7 @@ class DBManager(object):
         except Exception as e:
             raise e
     def alter_column(self, query):
+        print query
         try:
             conn = self.db_conn
             cursor = conn.cursor()

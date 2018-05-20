@@ -11,6 +11,7 @@
 	"db_user": "root",
 	"db_pswd": "123",
 	"db_name": "target",
-	"file_save_path" : "/home/sripathi/projects/"
+	"src_xml_path" : "/home/sripathi/projects/sql-xml-utility/src",
+	"target_xml_path" : "/home/sripathi/projects/sql-xml-utility/dest"
     }
 }

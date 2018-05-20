@@ -46,10 +46,12 @@ class XMLParser(object):
             raise str(e)
         
     def get_add_pkey_ddl(self, keys):
-        if not keys:
+
+        if keys:
             query = "ALTER TABLE %s ADD PRIMARY KEY(" % (self.table_name)
             keys = ",".join(keys)
             query = "%s%s);\n" % (query, keys)
+            print query
             return query
         
     def get_rm_pkey_ddl(self):
@@ -74,8 +76,8 @@ class XMLParser(object):
         ####### Code to be refactored ######### this should return dict insted list of dict
         col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
         # col = [col for col in self.get_columns() if col['@Field'] == col_name]
-        # col = col[0]
-        col['@Null'] == self.get_null_value(col['@Null'])
+        col = col[0]
+        col['@Null'] = self.get_null_value(col['@Null'])
         col_name = col['@Field']
         col_type = col['@Type']
         col_null = col['@Null']
@@ -97,8 +99,8 @@ class XMLParser(object):
     def get_update_col_ddl(self, col_name):
         col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
         # col = [col for col in self.get_columns() if col['@Field'] == col_name]
-        # col = col[0]
-        col['@Null'] == self.get_null_value(col['@Null'])
+        col = col[0]
+        col['@Null'] = self.get_null_value(col['@Null'])
         col_name = col['@Field']
         col_type = col['@Type']
         col_null = col['@Null']
@@ -182,9 +184,7 @@ class XMLParser(object):
         cols = self.get_columns()
         query_str = "CREATE TABLE %s(\n" % (self.table_name)
         col_no = 0
-        
-        primary = ""
-        
+
         for col in cols:
             col['@Null'] = self.get_null_value(col['@Null'])
             col_name = col['@Field']

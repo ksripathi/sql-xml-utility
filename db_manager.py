@@ -2,6 +2,9 @@
 
 import MySQLdb as db
 import json
+from execute_commands import execute_command
+
+log_file_name = 'queries.log.error'
 
 class DBManager(object):
 
@@ -38,13 +41,14 @@ class DBManager(object):
             raise e
 
     def create_table(self, query):
-
+        cmd = "echo '%s' >> %s " % (query, log_file_name)
         try:
             conn = self.db_conn
             cursor = conn.cursor()
             res = cursor.execute(query)
             return True
         except Exception as e:
+            (status_code, output) = execute_command(cmd)
             raise e
         
     def drop_table(self, table):
@@ -55,16 +59,20 @@ class DBManager(object):
             res = cursor.execute(query)
             return True
         except Exception as e:
+            (status_code, output) = execute_command(cmd)
             raise e
+        
     def alter_column(self, query):
-
+        cmd = "echo '%s' >> %s " % (query, log_file_name)
         try:
             conn = self.db_conn
             cursor = conn.cursor()
             res = cursor.execute(query)
             return True
         except Exception as e:
-            raise e
+            (status_code, output) = execute_command(cmd)
+            print query
+            print str(e)
         
         
 if __name__ == '__main__':

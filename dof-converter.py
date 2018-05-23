@@ -5,7 +5,7 @@ from execute_commands import execute_command
 import json
 import os
 
-class MysqlXmlConverter(object):
+class DOF_Converter(object):
 
     def __init__(self):
         self.db_manager = DBManager()
@@ -38,7 +38,7 @@ class MysqlXmlConverter(object):
 
 if __name__ == '__main__':
     
-    convert = MysqlXmlConverter()
+    convert = DOF_Converter()
     tables = convert.db_manager.get_tables()
     for table in tables:
         convert.convert_table_to_xml(table[0])

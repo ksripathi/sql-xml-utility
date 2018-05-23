@@ -27,7 +27,7 @@ def remove_files(file_path):
     except Exception as e:
         print str(e)
 
-class XML_Mysql_Conveter(object):
+class DDL_Conveter(object):
     
     def __init__(self):
 
@@ -47,6 +47,7 @@ class XML_Mysql_Conveter(object):
 
     def add_pkeys(self, keys):
         self.xml_parser.parse(self.src_xml_file)
+        # if not self.xml_parser.is_col_has_auto_increment(keys):
         query = self.xml_parser.get_add_pkey_ddl(keys)
         self.db_manager.alter_column(query)
 
@@ -60,6 +61,11 @@ class XML_Mysql_Conveter(object):
         query = self.xml_parser.get_rm_pkey_ddl()
         self.db_manager.alter_column(query)
 
+        # for key in keys:
+        #     if self.xml_parser.col_has_auto_increment(key):
+        #         query = self.xml_parser.get_update_col_ddl(key)
+        #         self.db_manager.alter_column(query)
+        
     def remove_ukeys(self):
         self.xml_parser.parse(self.target_xml_file)
         ukeys = self.xml_parser.get_ukey_names()
@@ -71,6 +77,8 @@ class XML_Mysql_Conveter(object):
     def add_columns(self, cols):
         self.xml_parser.parse(self.src_xml_file)
         for col in cols:
+            # if self.xml_parser.col_has_auto_increment(col):
+            #     self.remove_pkeys()
             query = self.xml_parser.get_add_col_ddl(col)
             self.db_manager.alter_column(query)
             
@@ -83,6 +91,8 @@ class XML_Mysql_Conveter(object):
     def update_columns(self, cols):
         self.xml_parser.parse(self.src_xml_file)
         for col in cols:
+            # if self.xml_parser.col_has_auto_increment(col):
+            #      self.remove_pkeys([col])
             query = self.xml_parser.get_update_col_ddl(col)
             self.db_manager.alter_column(query)
         
@@ -135,10 +145,12 @@ class XML_Mysql_Conveter(object):
         # if new_pkeys and target_pkeys:
         #     self.remove_pkeys()
         #     self.add_pkeys(new_pkeys)
-            
+        
         # if new_pkeys and not target_pkeys:
         #     self.add_pkeys(new_pkeys)
-            
+
+        ### if auto increment
+
         self.add_columns(new_col_names)
         self.remove_columns(del_col_names)
         self.update_columns(common_cols)
@@ -147,6 +159,10 @@ class XML_Mysql_Conveter(object):
             self.remove_pkeys()
         if src_pkeys:
             self.add_pkeys(src_pkeys)
+            col = self.xml_parser.auto_increment_col(src_pkeys)
+            if col:
+                query = self.xml_parser.get_update_col_ddl(col, 'ai')
+                self.db_manager.alter_column(query)
 
         if target_ukeys:
             self.remove_ukeys()
@@ -170,5 +186,5 @@ class XML_Mysql_Conveter(object):
             self.cmp_xml_files(file)
         
 if __name__ == '__main__':
-    converter = XML_Mysql_Conveter()
+    converter = DDL_Conveter()
     converter.diff_xml_files()

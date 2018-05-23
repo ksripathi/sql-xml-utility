@@ -37,6 +37,7 @@ class XMLParser(object):
         self.keys = None
         self.pkeys= None
         self.ukeys = None
+        
     def parse(self, xml_file):
         self.xml_file = xml_file
         self.table_name = get_table_name(self.xml_file)
@@ -100,7 +101,13 @@ class XMLParser(object):
                 return ''
         except Exception as e:
             raise str(e)
-        
+
+    def auto_increment_col(self, col_names):
+        for col_name in col_names:
+            res = filter(lambda col: col['@Extra'] == 'auto_increment' and col['@Field'] == col_name, self.get_columns())
+            if res:
+                return res[0]['@Field']
+    
     def get_add_col_ddl(self, col_name):
 
         ####### Code to be refactored ######### this should return dict insted of list with single dict
@@ -112,9 +119,13 @@ class XMLParser(object):
         col_type = col['@Type']
         col_null = col['@Null']
         col_extra = col['@Extra']
-            
-        query_str = "ALTER TABLE %s ADD %s %s %s %s" % \
+        if col_extra == 'auto_increment':
+            #query_str = query_str + 'primary key'
+            col_extra = ''
+
+        query_str = "ALTER TABLE %s ADD %s %s %s %s " % \
                     (self.table_name, col_name, col_type, col_null, col_extra)
+            
         if col.has_key('@Default'):
             col_default = col['@Default']
             query_str = "%s Default" % (query_str) 
@@ -126,8 +137,9 @@ class XMLParser(object):
             query = "%s;" % query_str
         return query
 
+    
 
-    def get_update_col_ddl(self, col_name):
+    def get_update_col_ddl(self, col_name, ai=None):
         ####### Code to be refactored ######### this should return dict insted of list with single dict        
         col = filter(lambda col: col['@Field'] == col_name, self.get_columns())
         #col = [col for col in self.get_columns() if col['@Field'] == col_name]
@@ -136,10 +148,17 @@ class XMLParser(object):
         col_name = col['@Field']
         col_type = col['@Type']
         col_null = col['@Null']
-        col_extra = col['@Extra']
+        if ai:
+            col_extra = col['@Extra']
+        else:
+            col_extra = ''
 
-        query_str = "ALTER TABLE %s MODIFY %s %s %s %s" % \
+        query_str = "ALTER TABLE %s MODIFY %s %s %s %s " % \
                     (self.table_name, col_name, col_type, col_null, col_extra)
+        
+        # if col_extra == 'auto_increment':
+        #     query_str = query_str + 'primary key'
+
         if col.has_key('@Default'):
             col_default = col['@Default']
             query_str = "%s Default" % (query_str) 

@@ -5,16 +5,4 @@
 * Utilities
   - DOF Utility
 
-* Steps to setup and run the =dof-utility=
-1. Clone the repository
-   #+BEGIN_EXAMPLE
-   git clone https://github.com/ksripathi/repo.gi
-   #+END_EXAMPLE
-2. Checkout the branch to =dof-utility=
-   #+BEGIN_EXAMPLE
-   cd repo
-   git checkout dof-utility
-   #+END_EXAMPLE
-3. Configure the variables
-   - Edit =config.sh= and change following parameters
 

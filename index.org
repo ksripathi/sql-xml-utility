@@ -1,0 +1,89 @@
+* Introduction
+  The =dof-utility= has two components which are used for
+  1. Converting database objects (i.e tables) into data object files
+     (i.e XML representation) and
+  2. Converting data object files into database objects
+
+* Steps to setup and run the =dof-utility=
+
+1. Clone the repository
+   #+BEGIN_EXAMPLE
+   git clone https://github.com/ksripathi/repo.gi
+   #+END_EXAMPLE
+2. Checkout the branch to =dof-utility=
+   #+BEGIN_EXAMPLE
+   cd repo
+   git checkout dof-utility
+   #+END_EXAMPLE
+3. Configuration
+
+   + Configuration for dof converter
+
+     - Edit =config.json= file and configure the variables
+
+	#+BEGIN_EXAMPLE
+	----
+	----
+	   "dev": {
+	   "db_host": "localhost",
+	   "db_user": "root",
+	   "db_pswd": "123",
+	   "db_name": "metadatams",
+	   "file_save_path" : "/home/sripathi/projects/dof-utility/src/"
+	},
+	----
+	----    
+	#+END_EXAMPLE
+
+     - Above database credentilals are with respect to the source
+       database
+
+     - Config varable =file_save_path= is the directory where all data
+       objects will be stored into
+
+   + Configuration for ddl converter
+     - Edit =config.json= file and configure the variables
+
+	#+BEGIN_EXAMPLE
+	----
+	----
+	  "qa": {
+	      "db_host": "localhost",
+	      "db_user": "root",
+	      "db_pswd": "123",
+	      "db_name": "metadatams_t",
+	      "src_xml_path" : "/home/sripathi/projects/dof-utility/src",
+	      "target_xml_path" : "/home/sripathi/projects/dof-utility/dest"
+	  }
+	----
+	----    
+	#+END_EXAMPLE
+
+     - Above database credentilals are with respect to the target
+       database
+
+     - Config varable =src_xml_path= is the directory where all data
+       object files of source database are stored
+
+     - Config varable =target_xml_path= is the directory where all data
+       object files of target database are stored
+
+4. Run the utility
+
+   + Run the dof converter
+     #+BEGIN_EXAMPLE
+     python dof-converter.py
+     #+END_EXAMPLE
+
+   + Above programe should place all data object files into configured
+     location
+
+   + Run the ddl converter
+     #+BEGIN_EXAMPLE
+     python ddl-converter.py
+     #+END_EXAMPLE
+
+   + Above programe should apply all the source database changes into
+     target database and place the database object files into
+     configured location
+
